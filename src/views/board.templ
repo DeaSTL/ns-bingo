@@ -1,0 +1,34 @@
+package views 
+import "jmhart.dev/ns-bingo/objects"
+
+
+templ TileButton(tile *objects.Tile,boardId string){
+  <button 
+  if tile.Selected {
+    class="active" 
+  }
+
+  hx-get={"/board/" + boardId} hx-swap="outerHTML" hx-select={"#" + tile.ID} id={tile.ID}> {tile.Value} </button>
+}
+
+
+templ Board(board objects.Board){
+  <table>
+    <tr class="top-letters">
+      <th>B</th>
+      <th>I</th>
+      <th>N</th>
+      <th>G</th>
+      <th>O</th>
+    </tr>
+    for _,row := range board.Tiles {
+      <tr class="items">
+      for _,item := range row {
+        <td>
+          @TileButton(item,board.ID)
+        </td>
+      }
+      </tr>
+    }
+  </table>
+}

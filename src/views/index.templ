@@ -1,0 +1,43 @@
+package views
+
+
+
+templ Index(id string) {
+  <html>
+    <head>
+      <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+      <style>
+        table {
+          border-collapse: collapse;
+        }
+        .top-letters {
+          font-size: 48px;
+        }
+        td {
+          margin: 0px;
+        }
+        .items > td {
+          border: 1px black solid;
+          text-align: center;
+          width: 200px;
+          height: 200px;
+        }
+        .items > td > button {
+          font-size: 24px;
+          padding: auto;
+          width: 100%;
+          height: 100%;
+        }
+        button.active {
+          background-color: #555; 
+        }
+      </style>
+    </head>
+    <body>
+      <div hx-trigger="load" id="board" hx-get={"/board/" + id}>
+      </div>
+      <div hx-trigger="click from:#board" hx-get={"/stats/" + id}hx-sync="#board">
+      </div>
+    </body>
+  </html>
+}
