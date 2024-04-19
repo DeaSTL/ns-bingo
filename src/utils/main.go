@@ -4,7 +4,7 @@ import "math/rand"
 
 
 func GenID(length int) string {
-	const alphabet = "abcdefghijklmnopqrstuvwxyz"
+	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 	id := make([]byte, length)
 

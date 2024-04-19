@@ -69,7 +69,7 @@ func getWins(board objects.Board) int {
 
 func main(){
 
-  possibleTiles := []string{
+  var possibleTiles = []string{
     "Diesel deafens mid-discussion to take a customer call",
     "lvcky trolling germans",
     "israel/Gaza",
@@ -109,6 +109,11 @@ func main(){
     newBoard := objects.Board{}
     newBoard.New(possibleTiles)
     boards[newBoard.ID] = newBoard
+    for id, board := range boards{
+      log.Printf("Board %v:\n %+v \n\n",id, board)
+    }
+
+    log.Printf("board ID: %v", newBoard.ID)
 
 		return Render(c, views.Index(newBoard.ID))
 	})
@@ -116,12 +121,18 @@ func main(){
   app.Get("/board/:id",func(c *fiber.Ctx)error{
     id := c.Params("id","")
     target := c.Get("HX-Target")
+    log.Printf("Target: %+v", target)
 
     if id == "" {
       return fiber.ErrNotFound
     }
 
     board,ok := boards[id]
+    for _, row := range board.Tiles {
+      for _, item := range row {
+        log.Printf("Board: %+v", *item)
+      }
+    }
 
     if !ok {
       return fiber.ErrNotFound
