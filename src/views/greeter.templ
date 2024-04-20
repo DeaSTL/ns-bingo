@@ -9,6 +9,9 @@ templ Greeter(newBoard objects.Board,boards map[string]*objects.Board){
     </head>
     <body>
       <div>
+        <h1>Nate Stream Bingo</h1>
+      </div>
+      <div>
         <input placeholder="Username" name="username" maxlength="24" _={
           "on keyup or load set #game-link.href to '/game/"+newBoard.ID+"?username=' + event.target.value"
           }></input>

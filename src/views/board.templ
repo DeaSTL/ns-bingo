@@ -13,22 +13,40 @@ templ TileButton(tile *objects.Tile,boardId string){
 
 
 templ Board(board *objects.Board){
-  <table>
-    <tr class="top-letters">
-      <th>B</th>
-      <th>I</th>
-      <th>N</th>
-      <th>G</th>
-      <th>O</th>
-    </tr>
-    for _,row := range board.Tiles {
-      <tr class="items">
-      for _,item := range row {
-        <td>
-          @TileButton(item,board.ID)
-        </td>
-      }
+  <div>
+    <div>
+      <h1>Nate Stream Bingo</h1>
+      <div>
+        <h3>Da Rules</h3>
+        <ol> 
+          <li>The event must occur in the <a href="https://discord.gg/vAUR4wat"> nate stream official discord</a></li>
+          <li>Coercing the conversion in a particular direction is not allowed</li>
+        </ol>
+        <h3>Win conditions</h3>
+        <ol> 
+          <li>5 events highlighted diagonally</li>
+          <li>5 horizontal events selected</li>
+          <li>5 vertical events selected</li>
+        </ol>
+      </div>
+    </div>
+    <table>
+      <tr class="top-letters">
+        <th>B</th>
+        <th>I</th>
+        <th>N</th>
+        <th>G</th>
+        <th>O</th>
       </tr>
-    }
-  </table>
+      for _,row := range board.Tiles {
+        <tr class="items">
+        for _,item := range row {
+          <td>
+            @TileButton(item,board.ID)
+          </td>
+        }
+        </tr>
+      }
+    </table>
+  </div>
 }
