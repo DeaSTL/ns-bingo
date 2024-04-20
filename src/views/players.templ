@@ -8,9 +8,11 @@ templ Players(boards []*objects.Board){
   <div>
     <h3>Players:</h3>
     for _,board := range boards {
-      <div> 
-        {board.Username} - {strconv.Itoa(board.GetWins())}
-      </div>
+      if board.Username != "" {
+        <div> 
+          {board.Username} - {strconv.Itoa(board.GetWins())}
+        </div>
+      }
     }
   </div>
 }

@@ -87,5 +87,5 @@ func (b *Board) New(options []string){
   }
   b.Tiles = board
   b.ID = utils.GenID(32)
-  b.TimeoutTimer = *time.NewTimer(time.Minute * 5)
+  b.TimeoutTimer = *time.NewTimer(time.Minute * 10)
 }

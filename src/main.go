@@ -52,15 +52,20 @@ func main(){
   boards := map[string]*objects.Board{}
 
   go func(boards *map[string]*objects.Board) {
-    for index, board := range *boards {
-      select{
-      case <-board.TimeoutTimer.C:
-        log.Printf("Deleting board %v", index)
-        delete(*boards,index)
+    for{
+      log.Printf("Attempting to prune unused boards")
+      for index, board := range *boards {
+        select{
+        case <-board.TimeoutTimer.C:
+          log.Printf("Deleting board %v", index)
+          delete(*boards,index)
+        default:
+          continue
+        }
       }
-    }
 
-    time.Sleep(time.Minute * 1)
+      time.Sleep(time.Minute * 5)
+    }
     
   }(&boards)
 
@@ -91,7 +96,7 @@ func main(){
     if !ok {
       return fiber.NewError(404,"Game not found")
     }
-
+    
     board.TimeoutTimer.Reset(time.Minute * 10)
 
     return c.SendString("")
