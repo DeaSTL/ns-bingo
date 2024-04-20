@@ -5,6 +5,7 @@ package views
 templ Index(id string) {
   <html>
     <head>
+      <title>Nate Stream Bingo</title>
       <script src="https://unpkg.com/htmx.org@1.9.12"></script>
       <style>
         table {
@@ -30,14 +31,12 @@ templ Index(id string) {
         }
         button.active {
           background-color: #555; 
+          color: #eee;
         }
         .invisible {
           display: none;
           width: 0px;
           height: 0px;
-        }
-        .error-text {
-          color: #ff0000;
         }
       </style>
     </head>

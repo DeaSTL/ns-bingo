@@ -59,6 +59,8 @@ func main(){
         delete(*boards,index)
       }
     }
+
+    time.Sleep(time.Minute * 1)
     
   }(&boards)
 
@@ -67,6 +69,7 @@ func main(){
   app.Use(recover.New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
+    
     newBoard := objects.Board{}
     newBoard.New(possibleTiles)
     boards[newBoard.ID] = &newBoard
