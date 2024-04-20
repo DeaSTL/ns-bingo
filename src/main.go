@@ -2,10 +2,15 @@ package main
 
 import (
 	"log"
+	"os"
+	"slices"
+	"sort"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"jmhart.dev/ns-bingo/objects"
 	"jmhart.dev/ns-bingo/views"
 )
@@ -20,122 +25,117 @@ func stringIn(items []string,item string) bool{
   return false
 }
 
-
-
-func getWins(board objects.Board) int {
-  colCount := []int{0,0,0,0,0}
-  rowCount := []int{0,0,0,0,0}
-  diagonal := []int{0,0}
-  wins := 0
-  for i, row := range board.Tiles {
-    for j, item := range row {
-      if item.Selected {
-        colCount[j]++
-        rowCount[i]++
-        if j == i {
-          diagonal[0]++
-        }
-        if j + i == 4 {
-          diagonal[1]++
-        }
-      }
-    }
-  }
-
-  if diagonal[0] == 5 {
-    wins++
-  }
-
-  if diagonal[1] == 5 {
-    wins++
-  }
-
-  for _, count := range rowCount  {
-    if count == 5 {
-      wins++
-    } 
-  }
-
-  for _, count := range colCount {
-    if count == 5 {
-      wins++
-    } 
-  }
-
-
-  return wins
+type GreeterForm struct{
+  Username string `json:"username"`
 }
 
 
 func main(){
 
-  var possibleTiles = []string{
-    "Diesel deafens mid-discussion to take a customer call",
-    "lvcky trolling germans",
-    "israel/Gaza",
-    "communism/ soviet union/ yugoslavia/ vietnam",
-    "3m+ autstic monologue",
-    "\"just use <technology>\"",
-    "Nate shows gun collection on webcam",
-    "lucas tells us how things actually literally work, actually",
-    "Ukraine",
-    "Roads party",
-    "economics an/cap",
-    "Rust",
-    "Crypto is a scam",
-    "shitting on focus bot",
-    "editor war",
-    "lvcky singing/ hot micing",
-    "lvcky playing devils advocate",
-    "Nate drops a hard R",
-    "Geordi preaching ruby doctrine",
-    "C++",
-    "type theory",
-    "ketsu tells us he's going to bed and then returns 20 minutes later",
-    "Nate's discord disconnects",
-    "Rex talks about manufacturing drugs",
-    "Nate refutes being gay",
-    "Geordi using light theme",
-    "Ketsu complains about worthless javascript developers",
-    "Ryan talks about how great helix is",
+  var possibleTiles = []string{}
+
+  tileFile,err := os.ReadFile("./tiles.txt")
+
+  if err != nil {
+    panic("Could not read ./tiles.txt")
+  }
+  tileBuffer := ""
+  for _, char := range tileFile {
+    tileBuffer += string(char)
+    if char == byte('\n'){
+      possibleTiles = append(possibleTiles,tileBuffer)
+      tileBuffer = "" 
+    }
   }
 
-  boards := map[string]objects.Board{}
 
+  boards := map[string]*objects.Board{}
+
+  go func(boards *map[string]*objects.Board) {
+    for index, board := range *boards {
+      select{
+      case <-board.TimeoutTimer.C:
+        log.Printf("Deleting board %v", index)
+        delete(*boards,index)
+      }
+    }
+    
+  }(&boards)
 
   app := fiber.New()
+
+  app.Use(recover.New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
     newBoard := objects.Board{}
     newBoard.New(possibleTiles)
-    boards[newBoard.ID] = newBoard
-    for id, board := range boards{
-      log.Printf("Board %v:\n %+v \n\n",id, board)
+    boards[newBoard.ID] = &newBoard
+
+    log.Printf("Creating new board with id: %v", newBoard.ID)
+
+		return Render(c, views.Greeter(newBoard,boards))
+	})
+
+  app.Post("/pulse/:id", func(c *fiber.Ctx) error {
+    id := c.Params("id","")
+
+    if id == "" {
+      return fiber.NewError(404,"Game not found")
     }
 
-    log.Printf("board ID: %v", newBoard.ID)
+    board,ok := boards[id]
 
-		return Render(c, views.Index(newBoard.ID))
-	})
+    if !ok {
+      return fiber.NewError(404,"Game not found")
+    }
+
+    board.TimeoutTimer.Reset(time.Minute * 10)
+
+    return c.SendString("")
+  })
+
+  app.Get("/game/:id",func(c *fiber.Ctx)error{
+
+    username := c.Query("username","")
+
+
+    if len(username) < 3 {
+       
+      return fiber.NewError(400,"Username must be at least 4 characters, get fucked")
+    }
+    
+    id := c.Params("id","")
+
+    if id == "" {
+      return fiber.NewError(404,"Game not found")
+    }
+
+    board,ok := boards[id]
+
+    if !ok {
+      return fiber.NewError(404,"Game not found")
+    }
+
+    board.Username = username
+    return Render(c, views.Index(board.ID))
+  })
 
   app.Get("/board/:id",func(c *fiber.Ctx)error{
     id := c.Params("id","")
     target := c.Get("HX-Target")
-    log.Printf("Target: %+v", target)
 
     if id == "" {
       return fiber.ErrNotFound
     }
 
     board,ok := boards[id]
-    for _, row := range board.Tiles {
-      for _, item := range row {
-        log.Printf("Board: %+v", *item)
-      }
-    }
 
     if !ok {
       return fiber.ErrNotFound
+    }
+
+    if target == "board" {
+      return Render(c,views.Board(board))
     }
 
     for _, row := range board.Tiles {
@@ -146,7 +146,47 @@ func main(){
       }
     }
 
+    log.Printf("Selecting tile: %v on board: %v", target,id)
+
     return Render(c,views.Board(board))
+  })
+
+  app.Delete("/exit/:id", func(c *fiber.Ctx) error {
+    
+    id := c.Params("id","")
+
+    if id == "" {
+      return fiber.ErrNotFound
+    }
+
+    _,ok := boards[id]
+
+    if !ok {
+      return fiber.ErrNotFound
+    }
+
+    delete(boards,id)
+
+    log.Printf("Deleting board: %+v", id)
+
+    return c.SendString("")
+  })
+  app.Get("/players", func(c *fiber.Ctx) error {
+    players := []*objects.Board{} 
+
+    for _, player := range boards{
+      players = append(players,player)
+    }
+
+    sort.Slice(players[:],func(i,j int) bool {
+      return players[i].GetWins() < players[j].GetWins()
+    })
+
+    slices.Reverse(players)
+
+
+
+    return Render(c,views.Players(players))
   })
   app.Get("/stats/:id", func(c *fiber.Ctx) error {
     id := c.Params("id","")
@@ -161,11 +201,7 @@ func main(){
       return fiber.ErrNotFound
     }
 
-    wins := getWins(board)
-
-    if wins > 0 {
-      log.Printf("Wins :%v",wins)
-    }
+    wins := board.GetWins()
 
     return Render(c,views.Stats(wins))
   })

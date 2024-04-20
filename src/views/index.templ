@@ -31,12 +31,24 @@ templ Index(id string) {
         button.active {
           background-color: #555; 
         }
+        .invisible {
+          display: none;
+          width: 0px;
+          height: 0px;
+        }
+        .error-text {
+          color: #ff0000;
+        }
       </style>
     </head>
     <body>
       <div hx-trigger="load" id="board" hx-get={"/board/" + id}>
       </div>
-      <div hx-trigger="click from:#board" hx-get={"/stats/" + id}hx-sync="#board">
+      <div hx-trigger="click from:#board" hx-get={"/stats/" + id} hx-sync="#board">
+      </div>
+      <div hx-trigger="load,every 10s" hx-get="/players">
+      </div>
+      <div hx-trigger="every 1m" hx-post={"/pulse/" + id}>
       </div>
     </body>
   </html>
