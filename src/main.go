@@ -5,7 +5,6 @@ import (
 	"os"
 	"slices"
 	"sort"
-	"time"
 
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
@@ -51,23 +50,23 @@ func main(){
 
   boards := map[string]*objects.Board{}
 
-  go func(boards *map[string]*objects.Board) {
-    for{
-      log.Printf("Attempting to prune unused boards")
-      for index, board := range *boards {
-        select{
-        case <-board.TimeoutTimer.C:
-          log.Printf("Deleting board %v", index)
-          delete(*boards,index)
-        default:
-          continue
-        }
-      }
-
-      time.Sleep(time.Minute * 5)
-    }
-    
-  }(&boards)
+//   go func(boards *map[string]*objects.Board) {
+//     for{
+//       log.Printf("Attempting to prune unused boards")
+//       for index, board := range *boards {
+//         select{
+//         case <-board.TimeoutTimer.C:
+//           log.Printf("Deleting board %v", index)
+//           delete(*boards,index)
+//         default:
+//           continue
+//         }
+//       }
+// 
+//       time.Sleep(time.Minute * 1)
+//     }
+//     
+//   }(&boards)
 
   app := fiber.New()
 
@@ -83,24 +82,6 @@ func main(){
 
 		return Render(c, views.Greeter(newBoard,boards))
 	})
-
-  app.Post("/pulse/:id", func(c *fiber.Ctx) error {
-    id := c.Params("id","")
-
-    if id == "" {
-      return fiber.NewError(404,"Game not found")
-    }
-
-    board,ok := boards[id]
-
-    if !ok {
-      return fiber.NewError(404,"Game not found")
-    }
-    
-    board.TimeoutTimer.Reset(time.Minute * 10)
-
-    return c.SendString("")
-  })
 
   app.Get("/game/:id",func(c *fiber.Ctx)error{
 

@@ -12,7 +12,7 @@ import (
 type Board struct {
   Tiles [][]*Tile
   ID string
-  TimeoutTimer time.Timer
+  TimeoutTimer *time.Timer
   Username string
 }
 
@@ -87,5 +87,5 @@ func (b *Board) New(options []string){
   }
   b.Tiles = board
   b.ID = utils.GenID(32)
-  b.TimeoutTimer = *time.NewTimer(time.Minute * 10)
+  b.TimeoutTimer = time.NewTimer(time.Minute * 10)
 }

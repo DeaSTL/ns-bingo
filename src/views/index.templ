@@ -47,8 +47,6 @@ templ Index(id string) {
       </div>
       <div hx-trigger="load,every 10s" hx-get="/players">
       </div>
-      <div hx-trigger="every 1m" hx-post={"/pulse/" + id}>
-      </div>
     </body>
   </html>
 }
